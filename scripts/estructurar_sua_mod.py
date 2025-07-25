@@ -442,7 +442,6 @@ def estructurar_varios_suas(folder_path, output_folder=None):
                         'NSS': content[start + 32:start + 43].strip(),
                         'RFC': content[start + 43:start + 56].strip(),
                         'CURP': content[start + 56:start + 74].strip(),
-                        'N_CREDITO': content[start + 74:start + 83].strip() or None,
                         'N_MOVS': int(content[start + 92:start + 94].strip() or '0'),
                         'NOMBRE ASEGURADO': nombre_trabajador,
                         'DIAS': int(content[start + 153:start + 155].strip() or '0'),
