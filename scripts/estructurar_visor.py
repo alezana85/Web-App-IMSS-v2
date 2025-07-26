@@ -71,7 +71,7 @@ def estructurar_visor(visor_path):
                         registro = {
                             'RP': linea[0:11].strip(),
                             'NSS': linea[23:34].strip(),  # 11 caracteres a partir del carácter 24
-                            'NOMBRE_ASEGURADO': linea[35:85].strip().replace('$', ' '),  # 50 caracteres corregido
+                            'NOMBRE ASEGURADO': linea[35:85].strip().replace('$', ' '),  # 50 caracteres corregido
                             'CURP': linea[88:106].strip()  # 18 caracteres a partir del carácter 89
                         }
                         datos.append(registro)
@@ -129,7 +129,7 @@ def estructurar_visor(visor_path):
                         registro = {
                             'RP': linea[0:11].strip(),
                             'NSS': linea[21:32].strip(),
-                            'NOMBRE_ASEGURADO': linea[33:83].strip().replace('$', ' '),
+                            'NOMBRE ASEGURADO': linea[33:83].strip().replace('$', ' '),
                             'CURP': linea[86:104].strip(),
                             'T_CREDITO': t_credito,
                             'V_CREDITO': float(linea[120:129]) if linea[120:129].strip().replace('.', '').replace('-', '').isdigit() else 0.0,
@@ -197,15 +197,15 @@ def estructurar_visor(visor_path):
                 
                 # Hacer merge con NSS
                 df_ema_before_merge = len(df_ema)
-                df_ema = df_ema.merge(df_complemento[['NSS', 'NOMBRE_ASEGURADO', 'CURP']], 
+                df_ema = df_ema.merge(df_complemento[['NSS', 'NOMBRE ASEGURADO', 'CURP']], 
                                     on='NSS', how='left')
                 print(f"Merge completado: {df_ema_before_merge} -> {len(df_ema)} registros")
                 print(f"Registros con CURP no vacío: {df_ema['CURP'].notna().sum()}")
-                print(f"Registros con NOMBRE_ASEGURADO no vacío: {df_ema['NOMBRE_ASEGURADO'].notna().sum()}")
+                print(f"Registros con NOMBRE ASEGURADO no vacío: {df_ema['NOMBRE ASEGURADO'].notna().sum()}")
             else:
                 print("No se encontraron archivos CDEMAS99")
                 # Si no hay archivos complementarios, agregar columnas vacías
-                df_ema['NOMBRE_ASEGURADO'] = ''
+                df_ema['NOMBRE ASEGURADO'] = ''
                 df_ema['CURP'] = ''
             
             # Eliminar filas con TIP_MOV = 2
@@ -224,7 +224,7 @@ def estructurar_visor(visor_path):
             
             agg_functions = {
                 'CURP': 'first',
-                'NOMBRE_ASEGURADO': 'first',
+                'NOMBRE ASEGURADO': 'first',
                 'DIAS': 'sum',
                 'CF': 'sum',
                 'EXC_PAT': 'sum',
@@ -251,13 +251,13 @@ def estructurar_visor(visor_path):
             df_ema_grouped = df_ema_grouped.merge(sdi_latest, on=['RP', 'NSS'])
             
             # Reordenar columnas
-            columnas_ema = ['RP', 'NSS', 'CURP', 'NOMBRE_ASEGURADO', 'DIAS', 'SDI', 'CF', 'EXC_PAT', 
+            columnas_ema = ['RP', 'NSS', 'CURP', 'NOMBRE ASEGURADO', 'DIAS', 'SDI', 'CF', 'EXC_PAT', 
                            'EXC_OBR', 'PD_PAT', 'PD_OBR', 'GMP_PAT', 'GMP_OBR', 'RT', 'IV_PAT', 
                            'IV_OBR', 'GPS', 'TOTAL']
             df_ema_grouped = df_ema_grouped[columnas_ema]
 
-            # Ordenar por RP y NOMBRE_ASEGURADO
-            df_ema_grouped = df_ema_grouped.sort_values(['RP', 'NOMBRE_ASEGURADO']).reset_index(drop=True)
+            # Ordenar por RP y NOMBRE ASEGURADO
+            df_ema_grouped = df_ema_grouped.sort_values(['RP', 'NOMBRE ASEGURADO']).reset_index(drop=True)
 
             excel_sheets['EMA'] = df_ema_grouped
             print(f"Hoja EMA creada con {len(df_ema_grouped)} registros")
@@ -282,12 +282,12 @@ def estructurar_visor(visor_path):
             if datos_complemento_eba:
                 df_complemento_eba = pd.DataFrame(datos_complemento_eba)
                 # Hacer merge con NSS - incluir TOTAL_INF
-                df_eba = df_eba.merge(df_complemento_eba[['NSS', 'NOMBRE_ASEGURADO', 'CURP', 
+                df_eba = df_eba.merge(df_complemento_eba[['NSS', 'NOMBRE ASEGURADO', 'CURP', 
                                                         'T_CREDITO', 'V_CREDITO', 'N_CREDITO']], 
                                     on='NSS', how='left')
             else:
                 # Si no hay archivos complementarios, agregar columnas vacías
-                df_eba['NOMBRE_ASEGURADO'] = ''
+                df_eba['NOMBRE ASEGURADO'] = ''
                 df_eba['CURP'] = ''
                 df_eba['T_CREDITO'] = ''
                 df_eba['V_CREDITO'] = 0.0
@@ -313,7 +313,7 @@ def estructurar_visor(visor_path):
             # Agrupar por RP y NSS
             agg_functions_eba = {
                 'CURP': 'first',
-                'NOMBRE_ASEGURADO': 'first',
+                'NOMBRE ASEGURADO': 'first',
                 'DIAS': 'sum',
                 'RETIRO': 'sum',
                 'CEAV_PAT': 'sum',
@@ -346,13 +346,13 @@ def estructurar_visor(visor_path):
             df_eba_grouped['N_CREDITO'] = df_eba_grouped['N_CREDITO'].replace('0000000000', '-')
             
             # Reordenar columnas
-            columnas_eba = ['RP', 'NSS', 'CURP', 'NOMBRE_ASEGURADO', 'DIAS', 'SDI', 'RETIRO', 
+            columnas_eba = ['RP', 'NSS', 'CURP', 'NOMBRE ASEGURADO', 'DIAS', 'SDI', 'RETIRO', 
                            'CEAV_PAT', 'CEAV_OBR', 'TOTAL_RCV', 'APORTACION_PAT', 'T_CREDITO', 
                            'V_CREDITO', 'N_CREDITO', 'AMORTIZACION', 'TOTAL_INF', 'TOTAL']
             df_eba_grouped = df_eba_grouped[columnas_eba]
 
-            # Ordenar por RP y NOMBRE_ASEGURADO
-            df_eba_grouped = df_eba_grouped.sort_values(['RP', 'NOMBRE_ASEGURADO']).reset_index(drop=True)
+            # Ordenar por RP y NOMBRE ASEGURADO
+            df_eba_grouped = df_eba_grouped.sort_values(['RP', 'NOMBRE ASEGURADO']).reset_index(drop=True)
 
             excel_sheets['EBA'] = df_eba_grouped
             print(f"Hoja EBA creada con {len(df_eba_grouped)} registros")
@@ -396,5 +396,3 @@ def estructurar_visor(visor_path):
     else:
         print("No se encontraron archivos para procesar")
         return None
-
-estructurar_visor(r'F:\01 TRABAJO\BPO\11 ENTREGA\PAGOS\06 JUNIO 2025\FERUCI\EMISIONES')

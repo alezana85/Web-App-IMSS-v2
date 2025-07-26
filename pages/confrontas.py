@@ -12,6 +12,7 @@ if scripts_path not in sys.path:
 try:
     from estructurar_sua_mod import estructurar_1sua_destino, estructurar_varios_suas
     from estructurar_emision_mod import estrucurar_varias_emisiones_destino, estructurar_1emision
+    from estructurar_visor import estructurar_visor
     from confronta import sua_vs_emision
 except ImportError as e:
     print(f"Error importando módulos: {e}")
@@ -30,6 +31,10 @@ except ImportError as e:
     
     def estructurar_1emision(*args, **kwargs):
         print("Función estructurar_1emision no disponible")
+        return None
+        
+    def estructurar_visor(*args, **kwargs):
+        print("Función estructurar_visor no disponible")
         return None
         
     def sua_vs_emision(*args, **kwargs):
@@ -62,6 +67,7 @@ class ConfrontasPage(ft.Container):
         self.selected_cedula_file = None
         self.selected_nomina_file = None
         self.selected_output_folder = None
+        self.selected_visor_folder = None
         
         # Referencias a elementos
         self.main_content_ref = ft.Ref[ft.Container]()
@@ -163,7 +169,7 @@ class ConfrontasPage(ft.Container):
                     self._create_menu_option("📁SUA vs 📄Emision", "n_sua_vs_1_em"),
                     self._create_menu_option("📁SUA vs 📁Emision", "equal_sua_vs_equal_em"),
                     self._create_menu_option("📄SUA vs 📄Emision", "1_sua_vs_1_em"),
-                    self._create_menu_option("📄Ced vs 📄Emision", "1_ced_vs_1_em"),
+                    self._create_menu_option("📁SUA vs 📁Visor", "1_ced_vs_1_em"),
                     self._create_menu_option("SUA vs Nomina", "sua_vs_nomina"),
                     ]
                 )
@@ -621,31 +627,31 @@ class ConfrontasPage(ft.Container):
         )
 
     def _create_1_ced_vs_1_em_content(self):
-        """Contenido para 1 Ced vs 1 EM"""
+        """Contenido para 📁SUA vs 📁Visor"""
         return ft.Column(
             alignment=ft.MainAxisAlignment.CENTER,
             horizontal_alignment=ft.CrossAxisAlignment.CENTER,
             spacing=30,
             controls=[
-                ft.Text("📄Cedula vs 📄Emision", size=24, weight=ft.FontWeight.BOLD, color="black"),
+                ft.Text("📁SUA vs 📁Visor", size=24, weight=ft.FontWeight.BOLD, color="black"),
                 # Botones en fila horizontal
                 ft.Row(
                     alignment=ft.MainAxisAlignment.CENTER,
                     spacing=20,
                     controls=[
                         ft.ElevatedButton(
-                            text="📄 Cédula",
+                            text="📁 SUA's",
                             width=150,
                             height=50,
                             style=self._create_button_style(True),
-                            on_click=self._select_cedula_file
+                            on_click=self._select_sua_folder
                         ),
                         ft.ElevatedButton(
-                            text="📄 Emisión",
+                            text="📁 Visor",
                             width=150,
                             height=50,
                             style=self._create_button_style(),
-                            on_click=self._select_emission_file
+                            on_click=self._select_visor_folder
                         ),
                     ]
                 ),
@@ -1104,8 +1110,66 @@ class ConfrontasPage(ft.Container):
             self._add_terminal_message(f"[ERROR] Error inesperado: {str(e)}", "red")
 
     def _execute_1_ced_vs_1_em(self):
-        """Ejecutar confrontación: 1 Cédula vs 1 Emisión"""
-        self._add_terminal_message("[WARNING] Función en desarrollo - 1 Cédula vs 1 Emisión", self.grey_color)
+        """Ejecutar confrontación: 📁SUA vs 📁Visor"""
+        try:
+            if not self.selected_sua_folder:
+                self._add_terminal_message("[ERROR] Por favor selecciona la carpeta de SUA's", "red")
+                return
+            
+            if not self.selected_visor_folder:
+                self._add_terminal_message("[ERROR] Por favor selecciona la carpeta del Visor", "red")
+                return
+                
+            if not self.selected_output_folder:
+                self._add_terminal_message("[ERROR] Por favor selecciona la carpeta de destino", "red")
+                return
+            
+            self._add_terminal_message("[INFO] Iniciando proceso SUA vs Visor...", "blue")
+            
+            # Paso 1: Estructurar varios SUA's
+            self._add_terminal_message("[INFO] Paso 1/3: Estructurando archivos SUA...", "blue")
+            sua_result = estructurar_varios_suas(self.selected_sua_folder, self.selected_output_folder)
+            
+            if sua_result:
+                self._add_terminal_message(f"[SUCCESS] Archivo SUA estructurado: {sua_result}", "green")
+            else:
+                self._add_terminal_message("[ERROR] Error al estructurar archivos SUA", "red")
+                return
+            
+            # Paso 2: Estructurar Visor
+            self._add_terminal_message("[INFO] Paso 2/3: Estructurando archivos del Visor...", "blue")
+            visor_result = estructurar_visor(self.selected_visor_folder)
+            
+            if visor_result:
+                self._add_terminal_message(f"[SUCCESS] Archivo Visor estructurado: {visor_result}", "green")
+                
+                # Mover el archivo del visor a la carpeta de destino si no está allí
+                import shutil
+                visor_filename = os.path.basename(visor_result)
+                visor_destino = os.path.join(self.selected_output_folder, visor_filename)
+                
+                if visor_result != visor_destino:
+                    shutil.copy2(visor_result, visor_destino)
+                    self._add_terminal_message(f"[INFO] Archivo Visor copiado a: {visor_destino}", "blue")
+                    visor_result = visor_destino
+                
+            else:
+                self._add_terminal_message("[ERROR] Error al estructurar archivos del Visor", "red")
+                return
+            
+            # Paso 3: Ejecutar confrontación SUA vs Emisión (Visor)
+            self._add_terminal_message("[INFO] Paso 3/3: Ejecutando confrontación...", "blue")
+            confronta_result = sua_vs_emision(sua_result, visor_result, self.selected_output_folder)
+            
+            if confronta_result:
+                self._add_terminal_message(f"[SUCCESS] Confrontación completada: {confronta_result}", "green")
+                self._add_terminal_message("[SUCCESS] ¡Proceso SUA vs Visor completado exitosamente!", "green")
+                self._add_terminal_message(f"[INFO] Archivos generados en: {self.selected_output_folder}", "blue")
+            else:
+                self._add_terminal_message("[ERROR] Error durante la confrontación", "red")
+                
+        except Exception as e:
+            self._add_terminal_message(f"[ERROR] Error inesperado: {str(e)}", "red")
 
     def _execute_sua_vs_nomina(self):
         """Ejecutar confrontación: SUA vs Nómina"""
@@ -1225,6 +1289,30 @@ class ConfrontasPage(ft.Container):
         # Aquí irá la lógica para seleccionar archivo de nómina
         self._add_terminal_message("[SUCCESS] Archivo de nómina seleccionado correctamente", "black")
 
+    def _select_visor_folder(self, e):
+        print("Seleccionar carpeta del Visor")
+        self._add_terminal_message("[INFO] Abriendo selector de carpeta del Visor...", "black")
+        
+        # Crear DirectoryPicker para carpetas con archivos del Visor
+        directory_picker = ft.FilePicker(
+            on_result=self._on_visor_folder_selected
+        )
+        self.page.overlay.append(directory_picker)
+        self.page.update()
+        
+        # Abrir el selector de carpeta
+        directory_picker.get_directory_path(
+            dialog_title="Seleccionar carpeta con archivos del Visor"
+        )
+
+    def _on_visor_folder_selected(self, e: ft.FilePickerResultEvent):
+        if e.path:
+            self.selected_visor_folder = e.path
+            folder_name = os.path.basename(self.selected_visor_folder)
+            self._add_terminal_message(f"[SUCCESS] Carpeta del Visor seleccionada: {folder_name}", "black")
+        else:
+            self._add_terminal_message("[WARNING] No se seleccionó carpeta del Visor", self.grey_color)
+
     def _select_output_folder(self, e):
         print("Seleccionar carpeta destino")
         self._add_terminal_message("[INFO] Abriendo selector de carpeta de destino...", "black")
@@ -1270,7 +1358,7 @@ class ConfrontasPage(ft.Container):
         )
 
     def _create_1_ced_vs_1_em_instructions(self):
-        """Instrucciones para 1 Ced vs 1 EM"""
+        """Instrucciones para 📁SUA vs 📁Visor"""
         return ft.Column(
             spacing=20,
             controls=[
@@ -1281,10 +1369,11 @@ class ConfrontasPage(ft.Container):
                     color="black"
                 ),
                 self._create_instructions_container([
-                    "• Selecciona un archivo de cédula específico",
-                    "• Selecciona un archivo de emisión correspondiente",
-                    "• Confrontación entre cédula y emisión",
-                    "• Verificación de datos de trabajadores"
+                    "• Selecciona la carpeta que contiene archivos .SUA",
+                    "• Selecciona la carpeta que contiene archivos del Visor",
+                    "• Selecciona la carpeta donde guardar los resultados",
+                    "• Se generarán 3 archivos: MULTI_SUA, VISOR_EMISION y CONFRONTA",
+                    "• Proceso completo: estructuración + confrontación automática"
                 ])
             ]
         )

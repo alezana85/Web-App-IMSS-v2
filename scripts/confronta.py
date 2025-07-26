@@ -77,13 +77,13 @@ def procesar_hoja_mensual(sua_path, emision_path):
     except Exception as e:
         raise ValueError(f"Error al leer los archivos Excel: {e}")
     
-    # Crear columna compuesta para identificación única
+    # Crear columna compuesta para identificación única (usando primeros 10 dígitos de RP)
     sua_df = sua_df.with_columns([
-        pl.concat_str([pl.col("RP"), pl.col("NSS")], separator="_").alias("ID_UNICO")
+        pl.concat_str([pl.col("RP").cast(pl.Utf8).str.slice(0, 10), pl.col("NSS")], separator="_").alias("ID_UNICO")
     ])
     
     emision_df = emision_df.with_columns([
-        pl.concat_str([pl.col("RP"), pl.col("NSS")], separator="_").alias("ID_UNICO")
+        pl.concat_str([pl.col("RP").cast(pl.Utf8).str.slice(0, 10), pl.col("NSS")], separator="_").alias("ID_UNICO")
     ])
     
     # Obtener todas las IDs únicas de ambos archivos
@@ -234,13 +234,13 @@ def procesar_hoja_bimestral(sua_path, emision_path):
     except Exception as e:
         raise ValueError(f"Error al leer las hojas bimestrales: {e}")
     
-    # Crear columna compuesta para identificación única
+    # Crear columna compuesta para identificación única (usando primeros 10 dígitos de RP)
     sua_df = sua_df.with_columns([
-        pl.concat_str([pl.col("RP"), pl.col("NSS")], separator="_").alias("ID_UNICO")
+        pl.concat_str([pl.col("RP").cast(pl.Utf8).str.slice(0, 10), pl.col("NSS")], separator="_").alias("ID_UNICO")
     ])
     
     emision_df = emision_df.with_columns([
-        pl.concat_str([pl.col("RP"), pl.col("NSS")], separator="_").alias("ID_UNICO")
+        pl.concat_str([pl.col("RP").cast(pl.Utf8).str.slice(0, 10), pl.col("NSS")], separator="_").alias("ID_UNICO")
     ])
     
     # Obtener todas las IDs únicas de ambos archivos
@@ -459,3 +459,9 @@ def escribir_dataframe_a_excel(worksheet, dataframe, purple_fill, green_font):
     for row_idx, row in enumerate(df_pandas.itertuples(index=False), 2):
         for col_idx, value in enumerate(row, 1):
             worksheet.cell(row=row_idx, column=col_idx).value = value
+
+sua_vs_emision(
+    sua_path=r'F:\01 TRABAJO\BPO\11 ENTREGA\PAGOS\06 JUNIO 2025\FERUCI\prueba\06-2025_MULTI_CEDULA.xlsx',
+    emision_path=r'F:\01 TRABAJO\BPO\11 ENTREGA\PAGOS\06 JUNIO 2025\FERUCI\prueba\06-2025_VISOR_EMISION.xlsx',
+    archive_path=r'F:\01 TRABAJO\BPO\11 ENTREGA\PAGOS\06 JUNIO 2025\FERUCI\prueba'
+)
