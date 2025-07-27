@@ -189,14 +189,15 @@ def procesar_hoja_mensual(sua_path, emision_path):
                 
                 # Verificar si solo hay diferencias en GMP y IV (pensionado)
                 elif not rt_diferencia and not resultado.get("CF", 0) and not resultado.get("EXC_PAT", 0) and not resultado.get("EXC_OBR", 0) and not resultado.get("PD_PAT", 0) and not resultado.get("PD_OBR", 0) and not resultado.get("GPS", 0):
-                    gmp_iv_diferencias = any([
+                    # Verificar que TODAS las columnas GMP y IV tengan diferencias (pensionado)
+                    gmp_iv_todas_diferentes = all([
                         resultado.get("GMP_PAT", 0) != 0,
                         resultado.get("GMP_OBR", 0) != 0,
                         resultado.get("IV_PAT", 0) != 0,
                         resultado.get("IV_OBR", 0) != 0
                     ])
                     
-                    if gmp_iv_diferencias:
+                    if gmp_iv_todas_diferentes:
                         observaciones.append("PENSIONADO")
             
             # Verificar diferencias por incapacidad/ausentismo
