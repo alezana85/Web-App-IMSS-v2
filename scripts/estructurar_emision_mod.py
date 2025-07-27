@@ -107,6 +107,8 @@ def estrucurar_varias_emisiones_destino(folder_path, output_folder=None):
             ema['NSS'] = ema['NSS'].apply(lambda x: str(int(x)).zfill(11) if pd.notna(x) else x)
             ema['Fecha del Movimiento'] = ema['Fecha del Movimiento'].replace('-', pd.NaT)
             ema['Fecha del Movimiento'] = pd.to_datetime(ema['Fecha del Movimiento'], errors='coerce')
+            # Eliminar filas completamente duplicadas
+            ema = ema.drop_duplicates()
             ema = ema.sort_values(['NSS', 'Fecha del Movimiento'], na_position='last')
 
             ema = ema.groupby('NSS').agg({
@@ -159,6 +161,8 @@ def estrucurar_varias_emisiones_destino(folder_path, output_folder=None):
                 )
                 eba['Fecha del Movimiento'] = eba['Fecha del Movimiento'].replace('-', pd.NaT)
                 eba['Fecha del Movimiento'] = pd.to_datetime(eba['Fecha del Movimiento'], errors='coerce')
+                # Eliminar filas completamente duplicadas
+                eba = eba.drop_duplicates()
                 eba = eba.sort_values(['NSS', 'Fecha del Movimiento'], na_position='last')
 
                 eba = eba.groupby('NSS').agg({
@@ -353,6 +357,8 @@ def estructurar_1emision(emision_path, output_folder=None):
     # Limpiar y convertir "Fecha del Movimiento" a datetime
     ema['Fecha del Movimiento'] = ema['Fecha del Movimiento'].replace('-', pd.NaT)
     ema['Fecha del Movimiento'] = pd.to_datetime(ema['Fecha del Movimiento'], errors='coerce')
+    # Eliminar filas completamente duplicadas
+    ema = ema.drop_duplicates()
     # Ordenar por NSS y Fecha del Movimiento
     ema = ema.sort_values(['NSS', 'Fecha del Movimiento'], na_position='last')
 
@@ -405,6 +411,8 @@ def estructurar_1emision(emision_path, output_folder=None):
         )
         eba['Fecha del Movimiento'] = eba['Fecha del Movimiento'].replace('-', pd.NaT)
         eba['Fecha del Movimiento'] = pd.to_datetime(eba['Fecha del Movimiento'], errors='coerce')
+        # Eliminar filas completamente duplicadas
+        eba = eba.drop_duplicates()
         eba = eba.sort_values(['NSS', 'Fecha del Movimiento'], na_position='last')
 
         eba = eba.groupby('NSS').agg({

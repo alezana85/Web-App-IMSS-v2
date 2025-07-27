@@ -239,6 +239,9 @@ def estructurar_1sua(sua_path):
     try:
         df = pd.DataFrame(registros_filtrados)
         
+        # Eliminar filas completamente duplicadas
+        df = df.drop_duplicates()
+        
         # Rellenar valores nulos de N_CREDITO con "-"
         if 'N_CREDITO' in df.columns:
             df['N_CREDITO'] = df['N_CREDITO'].fillna('-').replace('', '-')
@@ -266,6 +269,9 @@ def estructurar_1sua(sua_path):
                 
                 if registros_suab_filtrados:
                     df_suab = pd.DataFrame(registros_suab_filtrados)
+                    
+                    # Eliminar filas completamente duplicadas
+                    df_suab = df_suab.drop_duplicates()
                     
                     # Rellenar valores nulos de N_CREDITO con "-"
                     if 'N_CREDITO' in df_suab.columns:
@@ -580,6 +586,9 @@ def estructurar_varios_suas(folder_path):
         # Crear DataFrame principal
         df = pd.DataFrame(registros_filtrados)
         
+        # Eliminar filas completamente duplicadas
+        df = df.drop_duplicates()
+        
         # Rellenar valores nulos de N_CREDITO con "-"
         if 'N_CREDITO' in df.columns:
             df['N_CREDITO'] = df['N_CREDITO'].fillna('-').replace('', '-')
@@ -599,6 +608,9 @@ def estructurar_varios_suas(folder_path):
                 
                 if registros_suab_filtrados:
                     df_suab = pd.DataFrame(registros_suab_filtrados)
+                    
+                    # Eliminar filas completamente duplicadas
+                    df_suab = df_suab.drop_duplicates()
                     
                     # Rellenar valores nulos de N_CREDITO con "-"
                     if 'N_CREDITO' in df_suab.columns:

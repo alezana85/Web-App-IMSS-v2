@@ -211,6 +211,9 @@ def estructurar_visor(visor_path):
             # Eliminar filas con TIP_MOV = 2
             df_ema = df_ema[df_ema['TIP_MOV'] != 2]
             
+            # Eliminar filas completamente duplicadas
+            df_ema = df_ema.drop_duplicates()
+            
             # Convertir FECHA_MOV a datetime para poder ordenar
             df_ema['FECHA_MOV'] = pd.to_datetime(df_ema['FECHA_MOV'], format='%d-%m-%Y', errors='coerce')
             
@@ -295,6 +298,9 @@ def estructurar_visor(visor_path):
             
             # Eliminar filas con TIP_MOV = 2
             df_eba = df_eba[df_eba['TIP_MOV'] != 2]
+            
+            # Eliminar filas completamente duplicadas
+            df_eba = df_eba.drop_duplicates()
             
             # Convertir FECHA_MOV a datetime para poder ordenar
             df_eba['FECHA_MOV'] = pd.to_datetime(df_eba['FECHA_MOV'], format='%d-%m-%Y', errors='coerce')

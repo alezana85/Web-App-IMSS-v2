@@ -122,24 +122,34 @@ def procesar_hoja_mensual(sua_path, emision_path):
                     observaciones.append("NOMBRE DIFERENTE")
                 resultado["NOMBRE_ASEGURADO"] = emision_data["NOMBRE_ASEGURADO"]
             
-            # Comparar y calcular diferencias para columnas numéricas
-            columnas_comparacion = ["DIAS", "SDI", "CF", "EXC_PAT", "EXC_OBR", "PD_PAT", "PD_OBR", 
+            # Mantener SDI de emisión, o de SUA si no existe en emisión
+            if "SDI" in emision_data:
+                resultado["SDI"] = emision_data["SDI"]
+            elif "SDI" in sua_data:
+                resultado["SDI"] = sua_data["SDI"]
+            
+            # Comparar y calcular diferencias para columnas numéricas (excluyendo SDI)
+            columnas_comparacion = ["DIAS", "CF", "EXC_PAT", "EXC_OBR", "PD_PAT", "PD_OBR", 
                                   "GMP_PAT", "GMP_OBR", "RT", "IV_PAT", "IV_OBR", "GPS", "TOTAL"]
             
             diferencias_cuotas = False
             diferencia_dias = False
-            diferencia_sdi = False
             diferencia_total = 0
             
             for columna in columnas_comparacion:
                 if columna in sua_data and columna in emision_data:
                     sua_val = sua_data[columna] or 0
                     emision_val = emision_data[columna] or 0
+                    
+                    # Redondear valores a 2 decimales para comparación precisa
+                    if isinstance(sua_val, (float, int)) and isinstance(emision_val, (float, int)):
+                        sua_val = round(float(sua_val), 2)
+                        emision_val = round(float(emision_val), 2)
+                    
                     diferencia = sua_val - emision_val
                     
-                    # Aplicar tolerancia para errores de precisión de punto flotante
-                    if abs(diferencia) < 1e-10:
-                        diferencia = 0
+                    # Redondear la diferencia a 2 decimales
+                    diferencia = round(diferencia, 2)
                     
                     if columna == "DIAS":
                         resultado[columna] = diferencia
@@ -149,11 +159,6 @@ def procesar_hoja_mensual(sua_path, emision_path):
                                 observaciones.append("MAS DIAS EN SUA")
                             else:
                                 observaciones.append("MAS DIAS EN EMISION")
-                    elif columna == "SDI":
-                        resultado[columna] = diferencia
-                        if diferencia != 0:
-                            diferencia_sdi = True
-                            observaciones.append("SALARIO DIFERENTE")
                     elif columna == "TOTAL":
                         resultado[columna] = diferencia
                         diferencia_total = diferencia
@@ -161,6 +166,38 @@ def procesar_hoja_mensual(sua_path, emision_path):
                         resultado[columna] = diferencia
                         if diferencia != 0:
                             diferencias_cuotas = True
+            
+            # Verificar condiciones específicas para comentarios especiales
+            if diferencias_cuotas and not diferencia_dias:
+                # Verificar si solo hay diferencia en RT
+                rt_diferencia = resultado.get("RT", 0) or 0
+                otras_diferencias = any([
+                    resultado.get("CF", 0) != 0,
+                    resultado.get("EXC_PAT", 0) != 0,
+                    resultado.get("EXC_OBR", 0) != 0,
+                    resultado.get("PD_PAT", 0) != 0,
+                    resultado.get("PD_OBR", 0) != 0,
+                    resultado.get("GMP_PAT", 0) != 0,
+                    resultado.get("GMP_OBR", 0) != 0,
+                    resultado.get("IV_PAT", 0) != 0,
+                    resultado.get("IV_OBR", 0) != 0,
+                    resultado.get("GPS", 0) != 0
+                ])
+                
+                if rt_diferencia != 0 and not otras_diferencias:
+                    observaciones.append("REVISAR PRIMA DE RIESGO")
+                
+                # Verificar si solo hay diferencias en GMP y IV (pensionado)
+                elif not rt_diferencia and not resultado.get("CF", 0) and not resultado.get("EXC_PAT", 0) and not resultado.get("EXC_OBR", 0) and not resultado.get("PD_PAT", 0) and not resultado.get("PD_OBR", 0) and not resultado.get("GPS", 0):
+                    gmp_iv_diferencias = any([
+                        resultado.get("GMP_PAT", 0) != 0,
+                        resultado.get("GMP_OBR", 0) != 0,
+                        resultado.get("IV_PAT", 0) != 0,
+                        resultado.get("IV_OBR", 0) != 0
+                    ])
+                    
+                    if gmp_iv_diferencias:
+                        observaciones.append("PENSIONADO")
             
             # Verificar diferencias por incapacidad/ausentismo
             if diferencia_total != 0:
@@ -173,7 +210,11 @@ def procesar_hoja_mensual(sua_path, emision_path):
                     
                     if dias_emision > 0:
                         calculo_incapacidad = (total_emision / dias_emision) * (inc_val + aus_val)
-                        if abs(abs(diferencia_total) - abs(calculo_incapacidad)) < 0.40:  # Tolerancia para cálculo de incapacidad
+                        # Redondear a 2 decimales para comparación precisa
+                        calculo_incapacidad = round(calculo_incapacidad, 2)
+                        diferencia_total_redondeada = round(abs(diferencia_total), 2)
+                        
+                        if abs(diferencia_total_redondeada - abs(calculo_incapacidad)) < 0.40:  # Tolerancia para cálculo de incapacidad
                             observaciones = [obs for obs in observaciones if "DIFERENCIAS" not in obs]
                             observaciones.append("SIN DIFERENCIAS POR INCAPACIDAD/AUSENTISMO")
                         else:
@@ -291,13 +332,18 @@ def procesar_hoja_bimestral(sua_path, emision_path):
                 # Mantener el valor de emisión si existe, sino el de SUA
                 resultado["N_CREDITO"] = emision_credito if emision_credito != "-" else sua_credito
             
-            # Comparar y calcular diferencias para columnas numéricas
-            columnas_comparacion = ["DIAS", "SDI", "RETIRO", "CEAV_PAT", "CEAV_OBR", "TOTAL_RCV", 
+            # Mantener SDI de emisión, o de SUA si no existe en emisión
+            if "SDI" in emision_data:
+                resultado["SDI"] = emision_data["SDI"]
+            elif "SDI" in sua_data:
+                resultado["SDI"] = sua_data["SDI"]
+            
+            # Comparar y calcular diferencias para columnas numéricas (excluyendo SDI)
+            columnas_comparacion = ["DIAS", "RETIRO", "CEAV_PAT", "CEAV_OBR", "TOTAL_RCV", 
                                   "APORTACION_PAT", "AMORTIZACION", "TOTAL_INF", "TOTAL"]
             
             diferencias_cuotas = False
             diferencia_dias = False
-            diferencia_sdi = False
             diferencia_total = 0
             diferencia_total_rcv = 0
             
@@ -305,11 +351,16 @@ def procesar_hoja_bimestral(sua_path, emision_path):
                 if columna in sua_data and columna in emision_data:
                     sua_val = sua_data[columna] or 0
                     emision_val = emision_data[columna] or 0
+                    
+                    # Redondear valores a 2 decimales para comparación precisa
+                    if isinstance(sua_val, (float, int)) and isinstance(emision_val, (float, int)):
+                        sua_val = round(float(sua_val), 2)
+                        emision_val = round(float(emision_val), 2)
+                    
                     diferencia = sua_val - emision_val
                     
-                    # Aplicar tolerancia para errores de precisión de punto flotante
-                    if abs(diferencia) < 1e-10:
-                        diferencia = 0
+                    # Redondear la diferencia a 2 decimales
+                    diferencia = round(diferencia, 2)
                     
                     if columna == "DIAS":
                         resultado[columna] = diferencia
@@ -319,11 +370,6 @@ def procesar_hoja_bimestral(sua_path, emision_path):
                                 observaciones.append("MAS DIAS EN SUA")
                             else:
                                 observaciones.append("MAS DIAS EN EMISION")
-                    elif columna == "SDI":
-                        resultado[columna] = diferencia
-                        if diferencia != 0:
-                            diferencia_sdi = True
-                            observaciones.append("SALARIO DIFERENTE")
                     elif columna == "TOTAL":
                         resultado[columna] = diferencia
                         diferencia_total = diferencia
@@ -350,15 +396,20 @@ def procesar_hoja_bimestral(sua_path, emision_path):
                     if "AMORTIZACION" in sua_data and "AMORTIZACION" in emision_data:
                         amortizacion_sua = sua_data.get("AMORTIZACION", 0) or 0
                         amortizacion_emision = emision_data.get("AMORTIZACION", 0) or 0
+                        # Redondear valores a 2 decimales para comparación precisa
+                        amortizacion_sua = round(float(amortizacion_sua), 2)
+                        amortizacion_emision = round(float(amortizacion_emision), 2)
                         diferencia_amortizacion = amortizacion_sua - amortizacion_emision
-                        if abs(diferencia_amortizacion) < 1e-10:
-                            diferencia_amortizacion = 0
+                        diferencia_amortizacion = round(diferencia_amortizacion, 2)
                     
                     if dias_emision > 0:
                         calculo_incapacidad = ((ceav_pat_emision + ceav_obr_emision) / dias_emision) * (inc_val + aus_val)
+                        # Redondear a 2 decimales para comparación precisa
+                        calculo_incapacidad = round(calculo_incapacidad, 2)
+                        diferencia_total_rcv_redondeada = round(abs(diferencia_total_rcv), 2)
                         
                         # Solo aplicar "SIN DIFERENCIAS POR INCAPACIDAD/AUSENTISMO" si no hay diferencia en AMORTIZACION
-                        if (abs(abs(diferencia_total_rcv) - abs(calculo_incapacidad)) < 0.40 and 
+                        if (abs(diferencia_total_rcv_redondeada - abs(calculo_incapacidad)) < 0.40 and 
                             diferencia_amortizacion == 0):
                             observaciones = [obs for obs in observaciones if "DIFERENCIAS" not in obs]
                             observaciones.append("SIN DIFERENCIAS POR INCAPACIDAD/AUSENTISMO")
@@ -459,9 +510,3 @@ def escribir_dataframe_a_excel(worksheet, dataframe, purple_fill, green_font):
     for row_idx, row in enumerate(df_pandas.itertuples(index=False), 2):
         for col_idx, value in enumerate(row, 1):
             worksheet.cell(row=row_idx, column=col_idx).value = value
-
-sua_vs_emision(
-    sua_path=r'F:\01 TRABAJO\BPO\11 ENTREGA\PAGOS\06 JUNIO 2025\FERUCI\prueba\06-2025_MULTI_CEDULA.xlsx',
-    emision_path=r'F:\01 TRABAJO\BPO\11 ENTREGA\PAGOS\06 JUNIO 2025\FERUCI\prueba\06-2025_VISOR_EMISION.xlsx',
-    archive_path=r'F:\01 TRABAJO\BPO\11 ENTREGA\PAGOS\06 JUNIO 2025\FERUCI\prueba'
-)

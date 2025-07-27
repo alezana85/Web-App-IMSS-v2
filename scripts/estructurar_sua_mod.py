@@ -69,47 +69,59 @@ def estructurar_1sua_destino(sua_path, output_folder=None):
                 break
             
             try:
-                # Procesar nombre del trabajador correctamente
-                nombre_trabajador = content[start + 94:start + 144].replace('$', ' ').replace('/', 'Ñ').strip()
+                # Extraer datos del registro
+                rp = content[start+2:start+13].strip()
+                nss = content[start+33:start+44].strip()
+                rfc = content[start+44:start+57].strip()
+                curp = content[start+57:start+75].strip()
+                n_credito = content[start+75:start+85].strip()
+                if not n_credito:
+                    n_credito = None
+                movimientos = content[start+93:start+95].strip()
+                nombre = content[start+95:start+145].strip()
+                dias = int(content[start+154:start+156].strip()) if content[start+154:start+156].strip() else 0
+                sdi = float(content[start+145:start+152].strip()) / 100 if content[start+145:start+152].strip() else 0
+                incapacidad = int(content[start+156:start+158].strip()) if content[start+156:start+158].strip() else 0
+                ausentismo = int(content[start+158:start+160].strip()) if content[start+158:start+160].strip() else 0
+                cf = float(content[start+160:start+167].strip()) / 100 if content[start+160:start+167].strip() else 0
+                exc_pat = float(content[start+167:start+174].strip()) / 100 if content[start+167:start+174].strip() else 0
+                exc_obr = decode_base62(content[start+278:start+281]) / 100 if content[start+278:start+281].strip() else 0
+                pd_pat = float(content[start+174:start+181].strip()) / 100 if content[start+174:start+181].strip() else 0
+                pd_obr = decode_base62(content[start+281:start+284]) / 100 if content[start+281:start+284].strip() else 0
+                gmp_pat = float(content[start+181:start+188].strip()) / 100 if content[start+181:start+188].strip() else 0
+                gmp_obr = decode_base62(content[start+284:start+287]) / 100 if content[start+284:start+287].strip() else 0
+                rt = float(content[start+188:start+195].strip()) / 100 if content[start+188:start+195].strip() else 0
+                iv_pat = float(content[start+195:start+202].strip()) / 100 if content[start+195:start+202].strip() else 0
+                iv_obr = decode_base62(content[start+287:start+290]) / 100 if content[start+287:start+290].strip() else 0
+                gps = float(content[start+202:start+209].strip()) / 100 if content[start+202:start+209].strip() else 0
+                
+                total = cf + exc_pat + exc_obr + pd_pat + pd_obr + gmp_pat + gmp_obr + rt + iv_pat + iv_obr + gps
                 
                 registro = {
-                    'RP': content[start+2:start+13].strip(),
-                    'NSS': content[start+32:start+43].strip(),  # Mantener como string para preservar ceros al inicio
-                    'RFC': content[start+43:start+56].strip(),
-                    'CURP': content[start+56:start+74].strip(),
-                    'N_MOVS': int(content[start+92:start+94].strip() or '0'),
-                    'NOMBRE ASEGURADO': nombre_trabajador,
-                    'DIAS': int(content[start+153:start+155].strip() or '0'),
-                    'SDI': int(content[start+144:start+151]) / 100,
-                    'INC': int(content[start+155:start+157].strip() or '0'),
-                    'AUS': int(content[start+157:start+159].strip() or '0'),
-                    'CF': int(content[start+159:start+166]) / 100,
-                    'EXC_PAT': (int(content[start+166:start+173]) / 100) - (decode_base62(content[start + 277:start + 280]) / 100),
-                    'EXC_OBR': decode_base62(content[start+277:start+280]) / 100,
-                    'PD_PAT': (int(content[start+173:start+180]) / 100) - (decode_base62(content[start + 280:start + 283]) / 100),
-                    'PD_OBR': decode_base62(content[start+280:start+283]) / 100,
-                    'GMP_PAT': (int(content[start+180:start+187]) / 100) - (decode_base62(content[start + 283:start + 286]) / 100),
-                    'GMP_OBR': decode_base62(content[start+283:start+286]) / 100,
-                    'RT': int(content[start+187:start+194]) / 100,
-                    'IV_PAT': (int(content[start+194:start+201]) / 100) - (decode_base62(content[start + 286:start + 289]) / 100),
-                    'IV_OBR': decode_base62(content[start+286:start+289]) / 100,
-                    'GPS': int(content[start+201:start+208]) / 100
+                    'RP': rp,
+                    'NSS': nss,
+                    'NOMBRE ASEGURADO': nombre,
+                    'DIAS': dias,
+                    'SDI': sdi,
+                    'RFC': rfc,
+                    'CURP': curp,
+                    'N_CREDITO': n_credito,
+                    'MOVIMIENTOS': movimientos,
+                    'INCAPACIDAD': incapacidad,
+                    'AUSENTISMO': ausentismo,
+                    'CF': cf,
+                    'EXC_PAT': exc_pat,
+                    'EXC_OBR': exc_obr,
+                    'PD_PAT': pd_pat,
+                    'PD_OBR': pd_obr,
+                    'GMP_PAT': gmp_pat,
+                    'GMP_OBR': gmp_obr,
+                    'RT': rt,
+                    'IV_PAT': iv_pat,
+                    'IV_OBR': iv_obr,
+                    'GPS': gps,
+                    'TOTAL': total
                 }
-                
-                # Calcular total
-                registro['TOTAL'] = (
-                    registro['CF'] +
-                    registro['EXC_PAT'] +
-                    registro['EXC_OBR'] +
-                    registro['PD_PAT'] +
-                    registro['PD_OBR'] +
-                    registro['GMP_PAT'] +
-                    registro['GMP_OBR'] +
-                    registro['RT'] +
-                    registro['IV_PAT'] +
-                    registro['IV_OBR'] +
-                    registro['GPS']
-                )
                 
                 registros.append(registro)
                 
@@ -133,55 +145,41 @@ def estructurar_1sua_destino(sua_path, output_folder=None):
                 if start == -1:
                     break
                 
-                # Verificar que hay suficientes caracteres para extraer el registro completo
                 if start + 295 > len(content):
                     break
                 
                 try:
-                    nombre_trabajador = content[start + 94:start + 144].replace('$', ' ').replace('/', 'Ñ').strip()
+                    # Solo agregar campos específicos para SUA_BIMESTRAL
+                    rp = content[start+2:start+13].strip()
+                    nss = content[start+33:start+44].strip()
+                    nombre = content[start+95:start+145].strip()
+                    dias = int(content[start+154:start+156].strip()) if content[start+154:start+156].strip() else 0
+                    sdi = float(content[start+145:start+152].strip()) / 100 if content[start+145:start+152].strip() else 0
+                    n_credito = content[start+75:start+85].strip()
+                    if not n_credito:
+                        n_credito = None
+                    
+                    # Campos específicos bimestrales (ejemplo)
+                    retiro = float(content[start+209:start+216].strip()) / 100 if content[start+209:start+216].strip() else 0
+                    ceav_pat = float(content[start+216:start+223].strip()) / 100 if content[start+216:start+223].strip() else 0
+                    ceav_obr = float(content[start+223:start+230].strip()) / 100 if content[start+223:start+230].strip() else 0
+                    aportacion_pat = float(content[start+237:start+244].strip()) / 100 if content[start+237:start+244].strip() else 0
+                    amortizacion = float(content[start+244:start+251].strip()) / 100 if content[start+244:start+251].strip() else 0
+                    
                     registro_suab = {
-                        'RP': content[start + 2:start + 13].strip(),
-                        'NSS': content[start + 32:start + 43].strip(),  # Mantener como string para preservar ceros al inicio
-                        'RFC': content[start + 43:start + 56].strip(),
-                        'CURP': content[start + 56:start + 74].strip(),
-                        'N_MOVS': int(content[start + 92:start + 94].strip() or '0'),
-                        'NOMBRE ASEGURADO': nombre_trabajador,
-                        'DIAS': int(content[start + 215:start + 217].strip() or '0'),
-                        'SDI': int(content[start + 144:start + 151]) / 100,
-                        'INC': int(content[start + 217:start + 219].strip() or '0'),
-                        'AUS': int(content[start + 219:start + 221].strip() or '0'),
-                        'RETIRO': int(content[start + 221:start + 228]) / 100,
-                        'CEAV_PAT': int(content[start + 235:start + 242]) / 100,
-                        'CEAV_OBR': decode_base62(content[start + 289:start + 292]) / 100,
-                        'TOTAL_RCV': 0,  # Este campo se calculará más adelante sumando RETIRO, CEAV_PAT y CEAV_OBR
-                        'APORTACION_PAT': int(content[start + 263:start + 270]) / 100,
-                        'N_CREDITO': content[start + 74:start + 84].strip(),  # Mantener como string para preservar ceros al inicio
-                        'AMORTIZACION': int(content[start + 270:start + 277].strip()) / 100,
-                        'TOTAL_INF': 0,  # Este campo se calculará más adelante sumando APORTACION_PAT y AMORTIZACION
-                        'TOTAL': 0  # Este campo se calculará más adelante
+                        'RP': rp,
+                        'NSS': nss,
+                        'NOMBRE ASEGURADO': nombre,
+                        'DIAS': dias,
+                        'SDI': sdi,
+                        'N_CREDITO': n_credito,
+                        'RETIRO': retiro,
+                        'CEAV_PAT': ceav_pat,
+                        'CEAV_OBR': ceav_obr,
+                        'APORTACION_PAT': aportacion_pat,
+                        'AMORTIZACION': amortizacion,
+                        'TOTAL': retiro + ceav_pat + ceav_obr + aportacion_pat + amortizacion
                     }
-
-                    # Calcular el total RCV
-                    registro_suab['TOTAL_RCV'] = (
-                        registro_suab['RETIRO'] +
-                        registro_suab['CEAV_PAT'] +
-                        registro_suab['CEAV_OBR']
-                    )
-
-                    # Calcular el total INF
-                    registro_suab['TOTAL_INF'] = (
-                        registro_suab['APORTACION_PAT'] +
-                        registro_suab['AMORTIZACION']
-                    )
-
-                    # Calcular total SUAB
-                    registro_suab['TOTAL'] = (
-                        registro_suab['RETIRO'] +
-                        registro_suab['CEAV_PAT'] +
-                        registro_suab['CEAV_OBR'] +
-                        registro_suab['APORTACION_PAT'] +
-                        registro_suab['AMORTIZACION']
-                    )
 
                     registros_suab.append(registro_suab)
                 except (ValueError, IndexError) as e:
@@ -211,6 +209,9 @@ def estructurar_1sua_destino(sua_path, output_folder=None):
     # Crear un archivo Excel con los datos extraídos
     try:
         df = pd.DataFrame(registros_filtrados)
+        
+        # Eliminar filas completamente duplicadas
+        df = df.drop_duplicates()
         
         # Rellenar valores nulos de N_CREDITO con "-"
         if 'N_CREDITO' in df.columns:
@@ -243,6 +244,9 @@ def estructurar_1sua_destino(sua_path, output_folder=None):
                 if registros_suab_filtrados:
                     df_suab = pd.DataFrame(registros_suab_filtrados)
                     
+                    # Eliminar filas completamente duplicadas
+                    df_suab = df_suab.drop_duplicates()
+                    
                     # Rellenar valores nulos de N_CREDITO con "-"
                     if 'N_CREDITO' in df_suab.columns:
                         df_suab['N_CREDITO'] = df_suab['N_CREDITO'].fillna('-').replace('', '-')
@@ -250,13 +254,12 @@ def estructurar_1sua_destino(sua_path, output_folder=None):
                     # Ordenar por RP y después por NOMBRE ASEGURADO
                     df_suab = df_suab.sort_values(['RP', 'NOMBRE ASEGURADO']).reset_index(drop=True)
                     
-                    # Escribir la hoja SUA_BIMESTRAL
                     df_suab.to_excel(writer, index=False, sheet_name='SUA_BIMESTRAL')
-                    print(f"Hoja SUA_BIMESTRAL creada con {len(registros_suab_filtrados)} registros")
+                    print("Hoja SUA_BIMESTRAL creada (mes par detectado)")
                 else:
-                    print("No hay registros SUA_BIMESTRAL válidos después del filtro")
+                    print("No hay registros SUA_BIMESTRAL válidos para crear la hoja")
             elif crear_hoja_adicional:
-                print("Mes par detectado pero no se encontraron registros SUA_BIMESTRAL válidos")
+                print("No se pudieron procesar registros SUA_BIMESTRAL")
         
         # Aplicar formato usando openpyxl
         workbook = load_workbook(excel_path)
@@ -292,7 +295,7 @@ def estructurar_1sua_destino(sua_path, output_folder=None):
             
             # Definir los estilos para el encabezado SUA_BIMESTRAL
             header_fill_suab = PatternFill(start_color='611232', end_color='611232', fill_type='solid')
-            header_font_suab = Font(color='B3945A', bold=True)  # Fuente igual que SUA_MENSUAL
+            header_font_suab = Font(color='B3945A', bold=True)
 
             # Aplicar formato a la primera fila de SUA_BIMESTRAL
             for cell in worksheet_suab[1]:
@@ -323,9 +326,9 @@ def estructurar_1sua_destino(sua_path, output_folder=None):
         print("Formato SUA_MENSUAL aplicado: fondo #611232, fuente #B3945A")
         if crear_hoja_adicional:
             if 'SUA_BIMESTRAL' in workbook.sheetnames:
-                print("Hoja SUA_BIMESTRAL creada y formateada correctamente")
+                print("Hoja SUA_BIMESTRAL incluida (mes par detectado)")
             else:
-                print("Mes par detectado pero no se creó hoja SUA_BIMESTRAL (sin registros válidos)")
+                print("Mes par detectado pero no se creó hoja SUA_BIMESTRAL")
         
         # Limpiar archivo temporal
         try:
@@ -367,10 +370,9 @@ def estructurar_varios_suas(folder_path, output_folder=None):
         try:
             for item in os.listdir(directorio):
                 item_path = os.path.join(directorio, item)
-                
-                if os.path.isfile(item_path) and item.endswith('.SUA'):
+                if os.path.isfile(item_path) and item.upper().endswith('.SUA'):
                     archivos_sua.append(item_path)
-                elif os.path.isdir(item_path) and nivel < max_nivel:
+                elif os.path.isdir(item_path):
                     archivos_sua.extend(buscar_archivos_sua(item_path, nivel + 1, max_nivel))
         except PermissionError:
             print(f"Sin permisos para acceder a: {directorio}")
@@ -421,8 +423,7 @@ def estructurar_varios_suas(folder_path, output_folder=None):
             if primer_mes is None:
                 primer_mes = content[30:32]
                 primer_año = content[26:30]
-                mes_numero = int(primer_mes)
-                crear_hoja_bimestral = (mes_numero % 2 == 0)
+                crear_hoja_bimestral = (int(primer_mes) % 2 == 0)
             
             # Procesar registros SUA_MENSUAL
             registros_archivo = []
@@ -436,43 +437,67 @@ def estructurar_varios_suas(folder_path, output_folder=None):
                     break
                 
                 try:
-                    nombre_trabajador = content[start + 94:start + 144].replace('$', ' ').replace('/', 'Ñ').strip()
-                    registro = {
-                        'RP': content[start + 2:start + 13].strip(),
-                        'NSS': content[start + 32:start + 43].strip(),
-                        'RFC': content[start + 43:start + 56].strip(),
-                        'CURP': content[start + 56:start + 74].strip(),
-                        'N_MOVS': int(content[start + 92:start + 94].strip() or '0'),
-                        'NOMBRE ASEGURADO': nombre_trabajador,
-                        'DIAS': int(content[start + 153:start + 155].strip() or '0'),
-                        'SDI': int(content[start + 144:start + 151]) / 100,
-                        'INC': int(content[start + 155:start + 157].strip() or '0'),
-                        'AUS': int(content[start + 157:start + 159].strip() or '0'),
-                        'CF': int(content[start + 159:start + 166]) / 100,
-                        'EXC_PAT': (int(content[start + 166:start + 173]) / 100) - (decode_base62(content[start + 277:start + 280]) / 100),
-                        'EXC_OBR': decode_base62(content[start + 277:start + 280]) / 100,
-                        'PD_PAT': (int(content[start + 173:start + 180]) / 100) - (decode_base62(content[start + 280:start + 283]) / 100),
-                        'PD_OBR': decode_base62(content[start + 280:start + 283]) / 100,
-                        'GMP_PAT': (int(content[start + 180:start + 187]) / 100) - (decode_base62(content[start + 283:start + 286]) / 100),
-                        'GMP_OBR': decode_base62(content[start + 283:start + 286]) / 100,
-                        'RT': int(content[start + 187:start + 194]) / 100,
-                        'IV_PAT': (int(content[start + 194:start + 201]) / 100) - (decode_base62(content[start + 286:start + 289]) / 100),
-                        'IV_OBR': decode_base62(content[start + 286:start + 289]) / 100,
-                        'GPS': int(content[start + 201:start + 208]) / 100,
-                        'TOTAL': 0
-                    }
+                    # [Mismo código de extracción que en estructurar_1sua_destino]
+                    rp = content[start+2:start+13].strip()
+                    nss = content[start+33:start+44].strip()
+                    nombre = content[start+95:start+145].strip()
+                    dias = int(content[start+154:start+156].strip()) if content[start+154:start+156].strip() else 0
                     
-                    # Calcular el total
-                    registro['TOTAL'] = (
-                        registro['CF'] + registro['EXC_PAT'] + registro['EXC_OBR'] +
-                        registro['PD_PAT'] + registro['PD_OBR'] + registro['GMP_PAT'] +
-                        registro['GMP_OBR'] + registro['RT'] + registro['IV_PAT'] +
-                        registro['IV_OBR'] + registro['GPS']
-                    )
-                    
-                    registros_archivo.append(registro)
+                    # Solo procesar si tiene días
+                    if dias > 0:
+                        sdi = float(content[start+145:start+152].strip()) / 100 if content[start+145:start+152].strip() else 0
+                        rfc = content[start+44:start+57].strip()
+                        curp = content[start+57:start+75].strip()
+                        n_credito = content[start+75:start+85].strip()
+                        if not n_credito:
+                            n_credito = None
+                        movimientos = content[start+93:start+95].strip()
+                        incapacidad = int(content[start+156:start+158].strip()) if content[start+156:start+158].strip() else 0
+                        ausentismo = int(content[start+158:start+160].strip()) if content[start+158:start+160].strip() else 0
+                        cf = float(content[start+160:start+167].strip()) / 100 if content[start+160:start+167].strip() else 0
+                        exc_pat = float(content[start+167:start+174].strip()) / 100 if content[start+167:start+174].strip() else 0
+                        exc_obr = decode_base62(content[start+278:start+281]) / 100 if content[start+278:start+281].strip() else 0
+                        pd_pat = float(content[start+174:start+181].strip()) / 100 if content[start+174:start+181].strip() else 0
+                        pd_obr = decode_base62(content[start+281:start+284]) / 100 if content[start+281:start+284].strip() else 0
+                        gmp_pat = float(content[start+181:start+188].strip()) / 100 if content[start+181:start+188].strip() else 0
+                        gmp_obr = decode_base62(content[start+284:start+287]) / 100 if content[start+284:start+287].strip() else 0
+                        rt = float(content[start+188:start+195].strip()) / 100 if content[start+188:start+195].strip() else 0
+                        iv_pat = float(content[start+195:start+202].strip()) / 100 if content[start+195:start+202].strip() else 0
+                        iv_obr = decode_base62(content[start+287:start+290]) / 100 if content[start+287:start+290].strip() else 0
+                        gps = float(content[start+202:start+209].strip()) / 100 if content[start+202:start+209].strip() else 0
+                        
+                        total = cf + exc_pat + exc_obr + pd_pat + pd_obr + gmp_pat + gmp_obr + rt + iv_pat + iv_obr + gps
+                        
+                        registro = {
+                            'RP': rp,
+                            'NSS': nss,
+                            'NOMBRE ASEGURADO': nombre,
+                            'DIAS': dias,
+                            'SDI': sdi,
+                            'RFC': rfc,
+                            'CURP': curp,
+                            'N_CREDITO': n_credito,
+                            'MOVIMIENTOS': movimientos,
+                            'INCAPACIDAD': incapacidad,
+                            'AUSENTISMO': ausentismo,
+                            'CF': cf,
+                            'EXC_PAT': exc_pat,
+                            'EXC_OBR': exc_obr,
+                            'PD_PAT': pd_pat,
+                            'PD_OBR': pd_obr,
+                            'GMP_PAT': gmp_pat,
+                            'GMP_OBR': gmp_obr,
+                            'RT': rt,
+                            'IV_PAT': iv_pat,
+                            'IV_OBR': iv_obr,
+                            'GPS': gps,
+                            'TOTAL': total
+                        }
+                        
+                        registros_archivo.append(registro)
+                        
                 except (ValueError, IndexError) as e:
-                    print(f"Error procesando registro en {sua_file} posición {start}: {e}")
+                    print(f"Error procesando registro en {sua_file}, posición {start}: {e}")
                     continue
                 
                 start += 295
@@ -493,53 +518,50 @@ def estructurar_varios_suas(folder_path, output_folder=None):
                         break
                     
                     try:
-                        nombre_trabajador = content[start + 94:start + 144].replace('$', ' ').replace('/', 'Ñ').strip()
-                        registro_suab = {
-                            'RP': content[start + 2:start + 13].strip(),
-                            'NSS': content[start + 32:start + 43].strip(),
-                            'RFC': content[start + 43:start + 56].strip(),
-                            'CURP': content[start + 56:start + 74].strip(),
-                            'N_MOVS': int(content[start + 92:start + 94].strip() or '0'),
-                            'NOMBRE ASEGURADO': nombre_trabajador,
-                            'DIAS': int(content[start + 215:start + 217].strip() or '0'),
-                            'SDI': int(content[start + 144:start + 151]) / 100,
-                            'INC': int(content[start + 217:start + 219].strip() or '0'),
-                            'AUS': int(content[start + 219:start + 221].strip() or '0'),
-                            'RETIRO': int(content[start + 221:start + 228]) / 100,
-                            'CEAV_PAT': int(content[start + 235:start + 242]) / 100,
-                            'CEAV_OBR': decode_base62(content[start + 289:start + 292]) / 100,
-                            'TOTAL_RCV': 0,
-                            'APORTACION_PAT': int(content[start + 263:start + 270]) / 100,
-                            'N_CREDITO': content[start + 74:start + 84].strip(),
-                            'AMORTIZACION': int(content[start + 270:start + 277].strip()) / 100,
-                            'TOTAL_INF': 0,
-                            'TOTAL': 0
-                        }
+                        dias = int(content[start+154:start+156].strip()) if content[start+154:start+156].strip() else 0
                         
-                        # Calcular totales
-                        registro_suab['TOTAL_RCV'] = (
-                            registro_suab['RETIRO'] + registro_suab['CEAV_PAT'] + registro_suab['CEAV_OBR']
-                        )
-                        registro_suab['TOTAL_INF'] = (
-                            registro_suab['APORTACION_PAT'] + registro_suab['AMORTIZACION']
-                        )
-                        registro_suab['TOTAL'] = (
-                            registro_suab['RETIRO'] + registro_suab['CEAV_PAT'] + registro_suab['CEAV_OBR'] +
-                            registro_suab['APORTACION_PAT'] + registro_suab['AMORTIZACION']
-                        )
-                        
-                        registros_suab_archivo.append(registro_suab)
+                        if dias > 0:
+                            rp = content[start+2:start+13].strip()
+                            nss = content[start+33:start+44].strip()
+                            nombre = content[start+95:start+145].strip()
+                            sdi = float(content[start+145:start+152].strip()) / 100 if content[start+145:start+152].strip() else 0
+                            n_credito = content[start+75:start+85].strip()
+                            if not n_credito:
+                                n_credito = None
+                            
+                            retiro = float(content[start+209:start+216].strip()) / 100 if content[start+209:start+216].strip() else 0
+                            ceav_pat = float(content[start+216:start+223].strip()) / 100 if content[start+216:start+223].strip() else 0
+                            ceav_obr = float(content[start+223:start+230].strip()) / 100 if content[start+223:start+230].strip() else 0
+                            aportacion_pat = float(content[start+237:start+244].strip()) / 100 if content[start+237:start+244].strip() else 0
+                            amortizacion = float(content[start+244:start+251].strip()) / 100 if content[start+244:start+251].strip() else 0
+                            
+                            registro_suab = {
+                                'RP': rp,
+                                'NSS': nss,
+                                'NOMBRE ASEGURADO': nombre,
+                                'DIAS': dias,
+                                'SDI': sdi,
+                                'N_CREDITO': n_credito,
+                                'RETIRO': retiro,
+                                'CEAV_PAT': ceav_pat,
+                                'CEAV_OBR': ceav_obr,
+                                'APORTACION_PAT': aportacion_pat,
+                                'AMORTIZACION': amortizacion,
+                                'TOTAL': retiro + ceav_pat + ceav_obr + aportacion_pat + amortizacion
+                            }
+                            
+                            registros_suab_archivo.append(registro_suab)
+                            
                     except (ValueError, IndexError) as e:
-                        print(f"Error procesando registro SUA_BIMESTRAL en {sua_file} posición {start}: {e}")
+                        print(f"Error procesando registro SUA_BIMESTRAL en {sua_file}, posición {start}: {e}")
                         continue
                     
                     start += 295
                 
                 todos_registros_suab.extend(registros_suab_archivo)
+                print(f"Procesado {sua_file}: {len(registros_suab_archivo)} registros SUA_BIMESTRAL")
             
             print(f"Procesado {sua_file}: {len(registros_archivo)} registros SUA_MENSUAL")
-            if crear_hoja_bimestral:
-                print(f"Procesado {sua_file}: {len(registros_suab_archivo)} registros SUA_BIMESTRAL")
             
             # Limpiar archivo temporal
             try:
@@ -582,6 +604,9 @@ def estructurar_varios_suas(folder_path, output_folder=None):
         # Crear DataFrame principal
         df = pd.DataFrame(registros_filtrados)
         
+        # Eliminar filas completamente duplicadas
+        df = df.drop_duplicates()
+        
         # Rellenar valores nulos de N_CREDITO con "-"
         if 'N_CREDITO' in df.columns:
             df['N_CREDITO'] = df['N_CREDITO'].fillna('-').replace('', '-')
@@ -602,6 +627,9 @@ def estructurar_varios_suas(folder_path, output_folder=None):
                 if registros_suab_filtrados:
                     df_suab = pd.DataFrame(registros_suab_filtrados)
                     
+                    # Eliminar filas completamente duplicadas
+                    df_suab = df_suab.drop_duplicates()
+                    
                     # Rellenar valores nulos de N_CREDITO con "-"
                     if 'N_CREDITO' in df_suab.columns:
                         df_suab['N_CREDITO'] = df_suab['N_CREDITO'].fillna('-').replace('', '-')
@@ -610,6 +638,10 @@ def estructurar_varios_suas(folder_path, output_folder=None):
                     df_suab = df_suab.sort_values(['RP', 'NOMBRE ASEGURADO']).reset_index(drop=True)
                     df_suab.to_excel(writer, index=False, sheet_name='SUA_BIMESTRAL')
                     print("Hoja SUA_BIMESTRAL creada")
+                else:
+                    print("No hay registros SUA_BIMESTRAL válidos para crear la hoja")
+            elif crear_hoja_bimestral:
+                print("No se pudieron procesar registros SUA_BIMESTRAL")
         
         # Aplicar formato usando openpyxl
         workbook = load_workbook(excel_path)
@@ -646,7 +678,7 @@ def estructurar_varios_suas(folder_path, output_folder=None):
                 cell.fill = header_fill_suab
                 cell.font = header_font_suab
             
-            # Ajustar ancho de columnas SUA_BIMESTRAL
+            # Ajustar ancho de columnas para SUA_BIMESTRAL
             for column in worksheet_suab.columns:
                 max_length = 0
                 column_letter = column[0].column_letter
@@ -658,6 +690,8 @@ def estructurar_varios_suas(folder_path, output_folder=None):
                         pass
                 adjusted_width = min(max_length + 2, 50)
                 worksheet_suab.column_dimensions[column_letter].width = adjusted_width
+            
+            print("Formato SUA_BIMESTRAL aplicado: fondo #611232, fuente #B3945A")
         
         # Guardar cambios
         workbook.save(excel_path)
@@ -669,7 +703,10 @@ def estructurar_varios_suas(folder_path, output_folder=None):
         print(f"Total registros válidos procesados: {len(registros_filtrados)}")
         print("Formato aplicado: fondo #611232, fuente #B3945A")
         if crear_hoja_bimestral:
-            print("Hoja SUA_BIMESTRAL incluida (mes par detectado)")
+            if 'SUA_BIMESTRAL' in workbook.sheetnames:
+                print("Hoja SUA_BIMESTRAL incluida (mes par detectado)")
+            else:
+                print("Mes par detectado pero no se creó hoja SUA_BIMESTRAL")
         
         return excel_path
         

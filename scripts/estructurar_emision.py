@@ -43,6 +43,8 @@ def estructurar_1emision(emision_path):
     # Reemplazar "-" con NaN antes de convertir a datetime
     ema['Fecha del Movimiento'] = ema['Fecha del Movimiento'].replace('-', pd.NaT)
     ema['Fecha del Movimiento'] = pd.to_datetime(ema['Fecha del Movimiento'], errors='coerce')
+    # Eliminar filas completamente duplicadas
+    ema = ema.drop_duplicates()
     # Ordenar por NSS y Fecha del Movimiento para asegurar que 'last' tome el más reciente
     # Los valores NaT (fechas faltantes) irán al final del ordenamiento
     ema = ema.sort_values(['NSS', 'Fecha del Movimiento'], na_position='last')
@@ -101,6 +103,8 @@ def estructurar_1emision(emision_path):
         # Reemplazar "-" con NaN antes de convertir a datetime
         eba['Fecha del Movimiento'] = eba['Fecha del Movimiento'].replace('-', pd.NaT)
         eba['Fecha del Movimiento'] = pd.to_datetime(eba['Fecha del Movimiento'], errors='coerce')
+        # Eliminar filas completamente duplicadas
+        eba = eba.drop_duplicates()
         # Ordenar por NSS y Fecha del Movimiento para asegurar que 'last' tome el más reciente
         # Los valores NaT (fechas faltantes) irán al final del ordenamiento
         eba = eba.sort_values(['NSS', 'Fecha del Movimiento'], na_position='last')
@@ -321,6 +325,8 @@ def estrucurar_varias_emisiones(folder_path):
                 ema['NSS'] = ema['NSS'].apply(lambda x: str(int(x)).zfill(11) if pd.notna(x) else x)
                 ema['Fecha del Movimiento'] = ema['Fecha del Movimiento'].replace('-', pd.NaT)
                 ema['Fecha del Movimiento'] = pd.to_datetime(ema['Fecha del Movimiento'], errors='coerce')
+                # Eliminar filas completamente duplicadas
+                ema = ema.drop_duplicates()
                 ema = ema.sort_values(['NSS', 'Fecha del Movimiento'], na_position='last')
                 
                 ema = ema.groupby('NSS').agg({
@@ -373,6 +379,8 @@ def estrucurar_varias_emisiones(folder_path):
                     )
                     eba['Fecha del Movimiento'] = eba['Fecha del Movimiento'].replace('-', pd.NaT)
                     eba['Fecha del Movimiento'] = pd.to_datetime(eba['Fecha del Movimiento'], errors='coerce')
+                    # Eliminar filas completamente duplicadas
+                    eba = eba.drop_duplicates()
                     eba = eba.sort_values(['NSS', 'Fecha del Movimiento'], na_position='last')
                     
                     eba = eba.groupby('NSS').agg({
